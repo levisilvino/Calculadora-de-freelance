@@ -9,7 +9,6 @@ Uma aplicação para calcular preços de projetos baseado no valor/hora, com rec
 - 🏷️ Filtros por categoria para visualização rápida
 - 📈 Status dos projetos (A Fazer, Feito, Pago, Atrasado)
 - 💵 Cálculo automático de impostos e taxas adicionais
-- 📱 Interface moderna e responsiva
 
 ## Tecnologias Utilizadas
 
