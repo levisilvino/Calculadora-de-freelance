@@ -1,4 +1,7 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
+
   export let configuracoes = {
     taxaUrgencia: 1.2,
     taxaComplexidade: 1.3,
@@ -38,30 +41,18 @@
     taxaComplexidadePorcentagem = Number(taxaComplexidadePorcentagem.toFixed(2));
     impostoPorcentagem = Number(impostoPorcentagem.toFixed(2));
     
-    configuracoes.taxaUrgencia = 1 + (taxaUrgenciaPorcentagem / 100);
-    configuracoes.taxaComplexidade = 1 + (taxaComplexidadePorcentagem / 100);
-    configuracoes.impostos = impostoPorcentagem / 100;
-  }
+    const novasConfiguracoes = {
+      ...configuracoes,
+      taxaUrgencia: 1 + (taxaUrgenciaPorcentagem / 100),
+      taxaComplexidade: 1 + (taxaComplexidadePorcentagem / 100),
+      impostos: impostoPorcentagem / 100
+    };
 
-  import { onMount } from 'svelte';
-
-  onMount(() => {
-    try {
-      // Carrega as configurações do localStorage
-      const configSalvas = localStorage.getItem('configuracoes');
-      if (configSalvas) {
-        const config = JSON.parse(configSalvas);
-        configuracoes = { ...configuracoes, ...config };
-        
-        // Atualiza as porcentagens
-        taxaUrgenciaPorcentagem = ((configuracoes.taxaUrgencia - 1) * 100);
-        taxaComplexidadePorcentagem = ((configuracoes.taxaComplexidade - 1) * 100);
-        impostoPorcentagem = (configuracoes.impostos * 100);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
+    if (JSON.stringify(novasConfiguracoes) !== JSON.stringify(configuracoes)) {
+      configuracoes = novasConfiguracoes;
+      dispatch('configuracoesAtualizadas', configuracoes);
     }
-  });
+  }
 
   const moedas = [
     { valor: 'BRL', nome: 'Real Brasileiro', simbolo: 'R$', local: 'pt-BR' },
@@ -86,30 +77,19 @@
   }
 
   function handleSave() {
-    try {
-      // Salva as configurações no localStorage
-      localStorage.setItem('configuracoes', JSON.stringify({
-        taxaUrgencia: configuracoes.taxaUrgencia,
-        taxaComplexidade: configuracoes.taxaComplexidade,
-        moeda: configuracoes.moeda,
-        impostos: configuracoes.impostos
-      }));
+    dispatch('configuracoesAtualizadas', configuracoes);
+    
+    // Mostra mensagem de sucesso
+    const el = document.createElement('div');
+    el.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
+    el.textContent = 'Configurações salvas com sucesso!';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
 
-      // Mostra mensagem de sucesso
-      const el = document.createElement('div');
-      el.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
-      el.textContent = 'Configurações salvas com sucesso!';
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 3000);
-    } catch (error) {
-      // Se houver erro, mostra mensagem de erro
-      const el = document.createElement('div');
-      el.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg';
-      el.textContent = 'Erro ao salvar configurações!';
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 3000);
-      console.error('Erro ao salvar configurações:', error);
-    }
+  function handleMoedaChange(event) {
+    configuracoes.moeda = event.target.value;
+    dispatch('configuracoesAtualizadas', configuracoes);
   }
 </script>
 
@@ -125,40 +105,24 @@
       <div class="flex items-center justify-between mb-4">
         <div>
           <h3 class="text-lg font-medium text-gray-200">Moeda</h3>
-          <p class="text-sm text-gray-400">Escolha a moeda para exibir os valores</p>
+          <p class="text-sm text-gray-400">Selecione a moeda para seus cálculos</p>
         </div>
-        <span class="text-sm px-2 py-1 bg-gray-700 rounded text-gray-300">
-          Atual: {moedas.find(m => m.valor === configuracoes.moeda).simbolo}
-        </span>
       </div>
-      
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+      <select
+        bind:value={configuracoes.moeda}
+        on:change={handleMoedaChange}
+        class="w-full px-3 py-2 bg-gray-700/30 border border-gray-600 rounded-lg text-gray-200 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+      >
         {#each moedas as moeda}
-          <button
-            class="group relative p-4 rounded-lg border transition-all duration-200 {configuracoes.moeda === moeda.valor ? 'bg-indigo-500 border-indigo-400' : 'border-gray-600 hover:border-indigo-400'}"
-            on:click={() => configuracoes.moeda = moeda.valor}
-          >
-            <div class="flex items-center justify-between">
-              <div>
-                <span class="block font-medium {configuracoes.moeda === moeda.valor ? 'text-white' : 'text-gray-300 group-hover:text-indigo-400'}">
-                  {moeda.simbolo}
-                </span>
-                <span class="text-sm {configuracoes.moeda === moeda.valor ? 'text-indigo-200' : 'text-gray-400'}">
-                  {moeda.nome}
-                </span>
-              </div>
-              {#if configuracoes.moeda === moeda.valor}
-                <svg class="w-5 h-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-              {/if}
-            </div>
-          </button>
+          <option value={moeda.valor}>
+            {moeda.nome} ({moeda.simbolo})
+          </option>
         {/each}
-      </div>
+      </select>
     </section>
 
-    <!-- Taxas -->
+    <!-- Taxas e Impostos -->
     <section>
       <div class="mb-4">
         <h3 class="text-lg font-medium text-gray-200">Taxas e Impostos</h3>
@@ -172,45 +136,39 @@
             <label class="text-sm font-medium text-gray-300">
               Taxa de Urgência
             </label>
-            <div class="flex items-center gap-1">
-              <span class="text-sm font-mono text-indigo-400">+</span>
-              {#if editandoUrgencia}
-                <input
-                  type="number"
-                  bind:value={taxaUrgenciaPorcentagem}
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  use:focusInput
-                  on:blur={() => editandoUrgencia = false}
-                  on:keydown={(e) => handleKeydown(e, 'urgencia')}
-                  class="w-16 text-sm font-mono bg-gray-700 px-2 py-1 rounded text-indigo-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                />
-              {:else}
-                <button
-                  on:click={() => editandoUrgencia = true}
-                  class="text-sm font-mono bg-gray-700 px-2 py-1 rounded text-indigo-400 hover:bg-gray-600 transition-colors"
-                >
-                  {taxaUrgenciaPorcentagem.toFixed(2)}
-                </button>
-              {/if}
-              <span class="text-sm font-mono text-indigo-400">%</span>
+            {#if !editandoUrgencia}
+              <button
+                class="text-sm text-indigo-400 hover:text-indigo-300"
+                on:click={() => editandoUrgencia = true}
+              >
+                Editar
+              </button>
+            {/if}
+          </div>
+          
+          {#if editandoUrgencia}
+            <div class="flex items-center">
+              <input
+                type="number"
+                bind:value={taxaUrgenciaPorcentagem}
+                on:keydown={e => handleKeydown(e, 'urgencia')}
+                on:blur={() => editandoUrgencia = false}
+                use:focusInput
+                min="0"
+                max="1000"
+                step="0.1"
+                class="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-right"
+              />
+              <span class="ml-2 text-gray-400">%</span>
             </div>
-          </div>
+          {:else}
+            <p class="text-2xl font-medium text-gray-200">
+              {taxaUrgenciaPorcentagem}%
+            </p>
+          {/if}
           
-          <div class="flex items-center space-x-4">
-            <input
-              type="range"
-              bind:value={taxaUrgenciaPorcentagem}
-              min="0"
-              max="100"
-              step="5"
-              class="flex-1 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            >
-          </div>
-          
-          <p class="mt-2 text-sm text-gray-400">
-            Valor adicional: {formatMoney(valorExemplo * (configuracoes.taxaUrgencia - 1))}
+          <p class="mt-1 text-sm text-gray-400">
+            Taxa adicional para projetos urgentes
           </p>
         </div>
 
@@ -220,45 +178,39 @@
             <label class="text-sm font-medium text-gray-300">
               Taxa de Complexidade
             </label>
-            <div class="flex items-center gap-1">
-              <span class="text-sm font-mono text-indigo-400">+</span>
-              {#if editandoComplexidade}
-                <input
-                  type="number"
-                  bind:value={taxaComplexidadePorcentagem}
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  use:focusInput
-                  on:blur={() => editandoComplexidade = false}
-                  on:keydown={(e) => handleKeydown(e, 'complexidade')}
-                  class="w-16 text-sm font-mono bg-gray-700 px-2 py-1 rounded text-indigo-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                />
-              {:else}
-                <button
-                  on:click={() => editandoComplexidade = true}
-                  class="text-sm font-mono bg-gray-700 px-2 py-1 rounded text-indigo-400 hover:bg-gray-600 transition-colors"
-                >
-                  {taxaComplexidadePorcentagem.toFixed(2)}
-                </button>
-              {/if}
-              <span class="text-sm font-mono text-indigo-400">%</span>
+            {#if !editandoComplexidade}
+              <button
+                class="text-sm text-indigo-400 hover:text-indigo-300"
+                on:click={() => editandoComplexidade = true}
+              >
+                Editar
+              </button>
+            {/if}
+          </div>
+          
+          {#if editandoComplexidade}
+            <div class="flex items-center">
+              <input
+                type="number"
+                bind:value={taxaComplexidadePorcentagem}
+                on:keydown={e => handleKeydown(e, 'complexidade')}
+                on:blur={() => editandoComplexidade = false}
+                use:focusInput
+                min="0"
+                max="1000"
+                step="0.1"
+                class="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-right"
+              />
+              <span class="ml-2 text-gray-400">%</span>
             </div>
-          </div>
+          {:else}
+            <p class="text-2xl font-medium text-gray-200">
+              {taxaComplexidadePorcentagem}%
+            </p>
+          {/if}
           
-          <div class="flex items-center space-x-4">
-            <input
-              type="range"
-              bind:value={taxaComplexidadePorcentagem}
-              min="0"
-              max="100"
-              step="5"
-              class="flex-1 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            >
-          </div>
-          
-          <p class="mt-2 text-sm text-gray-400">
-            Valor adicional: {formatMoney(valorExemplo * (configuracoes.taxaComplexidade - 1))}
+          <p class="mt-1 text-sm text-gray-400">
+            Taxa adicional para projetos complexos
           </p>
         </div>
 
@@ -269,48 +221,40 @@
               <label class="text-sm font-medium text-gray-300">
                 Impostos
               </label>
-              <p class="text-xs text-gray-400 mt-0.5">
-                Impostos são calculados sobre o valor final após taxas adicionais
-              </p>
-            </div>
-            <div class="flex items-center gap-1">
-              {#if editandoImpostos}
-                <input
-                  type="number"
-                  bind:value={impostoPorcentagem}
-                  min="0"
-                  max="40"
-                  step="0.01"
-                  use:focusInput
-                  on:blur={() => editandoImpostos = false}
-                  on:keydown={(e) => handleKeydown(e, 'impostos')}
-                  class="w-16 text-sm font-mono bg-gray-700 px-2 py-1 rounded text-yellow-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
-                />
-              {:else}
+              {#if !editandoImpostos}
                 <button
+                  class="ml-4 text-sm text-indigo-400 hover:text-indigo-300"
                   on:click={() => editandoImpostos = true}
-                  class="text-sm font-mono bg-gray-700 px-2 py-1 rounded text-yellow-400 hover:bg-gray-600 transition-colors"
                 >
-                  {impostoPorcentagem.toFixed(2)}
+                  Editar
                 </button>
               {/if}
-              <span class="text-sm font-mono text-yellow-400">%</span>
             </div>
           </div>
           
-          <div class="flex items-center space-x-4">
-            <input
-              type="range"
-              bind:value={impostoPorcentagem}
-              min="0"
-              max="40"
-              step="0.5"
-              class="flex-1 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-500"
-            >
-          </div>
+          {#if editandoImpostos}
+            <div class="flex items-center">
+              <input
+                type="number"
+                bind:value={impostoPorcentagem}
+                on:keydown={e => handleKeydown(e, 'impostos')}
+                on:blur={() => editandoImpostos = false}
+                use:focusInput
+                min="0"
+                max="100"
+                step="0.1"
+                class="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-right"
+              />
+              <span class="ml-2 text-gray-400">%</span>
+            </div>
+          {:else}
+            <p class="text-2xl font-medium text-gray-200">
+              {impostoPorcentagem}%
+            </p>
+          {/if}
           
-          <p class="mt-2 text-sm text-gray-400">
-            Valor dos impostos: {formatMoney(valorExemplo * configuracoes.taxaUrgencia * configuracoes.taxaComplexidade * configuracoes.impostos)}
+          <p class="mt-1 text-sm text-gray-400">
+            Impostos sobre o valor final
           </p>
         </div>
       </div>
@@ -319,73 +263,47 @@
     <!-- Exemplo -->
     <section class="bg-gradient-to-br from-gray-700/30 to-gray-700/10 rounded-lg p-6">
       <div class="mb-4">
-        <h3 class="text-lg font-medium text-gray-200">Simulação de Projeto</h3>
-        <p class="text-sm text-gray-400">Veja como as taxas e impostos afetam o valor final</p>
+        <h3 class="text-lg font-medium text-gray-200">Exemplo de Cálculo</h3>
+        <p class="text-sm text-gray-400">Veja como as taxas afetam o valor final</p>
       </div>
 
       <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-300 mb-2">
-            Valor Base do Projeto
-          </label>
-          <div class="relative">
-            <input
-              type="number"
-              bind:value={valorExemplo}
-              min="0"
-              step="100"
-              class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-100 pr-16"
-            >
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <span class="text-gray-400">{configuracoes.moeda}</span>
+        <div class="flex items-center space-x-4">
+          <label class="text-sm text-gray-400">Valor Base:</label>
+          <input
+            type="number"
+            bind:value={valorExemplo}
+            class="w-32 px-3 py-1.5 bg-gray-700/50 border border-gray-600 rounded text-white text-right"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-400">Valor Base</span>
+            <span class="text-gray-200">{formatMoney(valorExemplo)}</span>
+          </div>
+          
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-400">+ Taxa de Urgência ({taxaUrgenciaPorcentagem}%)</span>
+            <span class="text-gray-200">{formatMoney(valorExemplo * (configuracoes.taxaUrgencia - 1))}</span>
+          </div>
+          
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-400">+ Taxa de Complexidade ({taxaComplexidadePorcentagem}%)</span>
+            <span class="text-gray-200">{formatMoney(valorExemplo * (configuracoes.taxaComplexidade - 1))}</span>
+          </div>
+          
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-400">+ Impostos ({impostoPorcentagem}%)</span>
+            <span class="text-gray-200">{formatMoney(calcularValorFinal(valorExemplo) - (valorExemplo * configuracoes.taxaUrgencia * configuracoes.taxaComplexidade))}</span>
+          </div>
+
+          <div class="pt-2 mt-2 border-t border-gray-600">
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-300">Valor Final</span>
+              <span class="font-medium text-indigo-400">{formatMoney(calcularValorFinal(valorExemplo))}</span>
             </div>
           </div>
-        </div>
-
-        <div class="bg-gray-700/30 rounded-lg p-4">
-          <ul class="space-y-2 text-sm">
-            <li class="flex justify-between">
-              <span class="text-gray-400">Valor Base:</span>
-              <span class="text-gray-200">{formatMoney(valorExemplo)}</span>
-            </li>
-            {#if taxaUrgenciaPorcentagem > 0}
-              <li class="flex justify-between">
-                <span class="text-gray-400">+ Taxa de Urgência ({taxaUrgenciaPorcentagem.toFixed(2)}%):</span>
-                <span class="text-gray-200">{formatMoney(valorExemplo * (configuracoes.taxaUrgencia - 1))}</span>
-              </li>
-            {/if}
-            {#if taxaComplexidadePorcentagem > 0}
-              <li class="flex justify-between">
-                <span class="text-gray-400">+ Taxa de Complexidade ({taxaComplexidadePorcentagem.toFixed(2)}%):</span>
-                <span class="text-gray-200">{formatMoney(valorExemplo * (configuracoes.taxaComplexidade - 1))}</span>
-              </li>
-            {/if}
-            <li class="flex justify-between border-t border-gray-600 pt-2">
-              <span class="text-gray-400">Subtotal (com taxas):</span>
-              <span class="text-gray-200">{formatMoney(valorExemplo * configuracoes.taxaUrgencia * configuracoes.taxaComplexidade)}</span>
-            </li>
-            {#if impostoPorcentagem > 0}
-              <li class="flex justify-between">
-                <span class="text-gray-400">+ Impostos ({impostoPorcentagem.toFixed(2)}%):</span>
-                <span class="text-yellow-400">{formatMoney(valorExemplo * configuracoes.taxaUrgencia * configuracoes.taxaComplexidade * configuracoes.impostos)}</span>
-              </li>
-            {/if}
-            <li class="flex justify-between pt-2 border-t border-gray-600">
-              <span class="font-medium text-gray-200">Valor Final:</span>
-              <span class="font-medium text-indigo-400">
-                {formatMoney(calcularValorFinal(valorExemplo))}
-              </span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="bg-gray-800/50 rounded-lg p-4 text-sm">
-          <h4 class="font-medium text-gray-300 mb-2">Como é calculado?</h4>
-          <ol class="list-decimal list-inside space-y-1 text-gray-400">
-            <li>Valor base: o preço inicial do projeto</li>
-            <li>Aplicação das taxas adicionais (urgência e complexidade)</li>
-            <li>Cálculo dos impostos sobre o valor com taxas</li>
-          </ol>
         </div>
       </div>
     </section>
@@ -394,11 +312,8 @@
   <div class="p-6 bg-gray-700/30 border-t border-gray-700">
     <button
       on:click={handleSave}
-      class="w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-indigo-700 transition-colors flex items-center justify-center gap-2"
+      class="w-full px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors"
     >
-      <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-      </svg>
       Salvar Configurações
     </button>
   </div>

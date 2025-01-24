@@ -1,12 +1,14 @@
 <script>
-  import { onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
 
+  const dispatch = createEventDispatcher();
+
   export let valorHora = 0;
-  let salarioDesejado = 0;
-  let horasPorDia = 8;
-  let diasPorSemana = 5;
-  let semanasFeriasAno = 4;
+  export let salarioDesejado = 0;
+  export let horasPorDia = 8;
+  export let diasPorSemana = 5;
+  export let semanasFeriasAno = 4;
   let showCalculo = false;
 
   // Validar e ajustar valores
@@ -22,41 +24,15 @@
     
     // Garantir que salário não seja negativo
     salarioDesejado = Math.max(0, salarioDesejado);
-  }
 
-  onMount(() => {
-    // Carregar valores do localStorage
-    const savedSalario = localStorage.getItem('salarioDesejado');
-    const savedHoras = localStorage.getItem('horasPorDia');
-    const savedDias = localStorage.getItem('diasPorSemana');
-    const savedFerias = localStorage.getItem('semanasFeriasAno');
-    const savedValorHora = localStorage.getItem('valorHora');
-
-    // Definir valores padrão apenas se não houver valores salvos
-    salarioDesejado = savedSalario ? Number(savedSalario) : 0;
-    horasPorDia = savedHoras ? Number(savedHoras) : 8;
-    diasPorSemana = savedDias ? Number(savedDias) : 5;
-    semanasFeriasAno = savedFerias ? Number(savedFerias) : 4;
-    valorHora = savedValorHora ? Number(savedValorHora) : 0;
-
-    console.log('Valores carregados:', {
+    // Emitir evento com os valores atualizados
+    dispatch('valoresAtualizados', {
       salarioDesejado,
       horasPorDia,
       diasPorSemana,
-      semanasFeriasAno,
-      valorHora
+      semanasFeriasAno
     });
-
-    validarValores();
-    
-    // Adiciona um pequeno delay antes de calcular
-    setTimeout(() => {
-      if (salarioDesejado > 0) {
-        calcularValorHora();
-        console.log('Valor hora recalculado após delay:', valorHora);
-      }
-    }, 100);
-  });
+  }
 
   function calcularValorHora() {
     validarValores();
@@ -72,19 +48,14 @@
       
       if (!isNaN(novoValorHora) && isFinite(novoValorHora) && novoValorHora > 0) {
         valorHora = novoValorHora;
-        localStorage.setItem('valorHora', valorHora.toString());
-        console.log('Cálculo:', {
-          salario,
-          horasTrabalhadasMes,
-          valorHora
-        });
+        dispatch('valorHoraAtualizado', valorHora);
       } else {
         valorHora = 0;
-        localStorage.setItem('valorHora', '0');
+        dispatch('valorHoraAtualizado', 0);
       }
     } else {
       valorHora = 0;
-      localStorage.setItem('valorHora', '0');
+      dispatch('valorHoraAtualizado', 0);
     }
   }
 
@@ -99,43 +70,29 @@
   $: horasMensais = ((52 - semanasFeriasAno) * horasPorDia * diasPorSemana / 12).toFixed(1);
   $: valorHoraFormatado = formatMoney(valorHora);
   $: salarioFormatado = formatMoney(salarioDesejado);
-  
-  // Recalcular quando qualquer valor mudar
-  $: {
-    if (salarioDesejado || horasPorDia || diasPorSemana || semanasFeriasAno) {
-      validarValores();
-      calcularValorHora();
-    }
-  }
 
   function handleSalarioChange(e) {
     e.preventDefault();
     const valor = Number(e.target.value);
     salarioDesejado = valor;
-    // Salvar imediatamente quando o usuário digita
-    localStorage.setItem('salarioDesejado', valor.toString());
-    // Recalcular valor hora
     calcularValorHora();
   }
 
   function handleHorasChange(e) {
     const valor = Number(e.target.value);
     horasPorDia = Math.min(Math.max(0, valor), 24);
-    localStorage.setItem('horasPorDia', horasPorDia.toString());
     calcularValorHora();
   }
 
   function handleDiasChange(e) {
     const valor = Number(e.target.value);
     diasPorSemana = Math.min(Math.max(0, valor), 7);
-    localStorage.setItem('diasPorSemana', diasPorSemana.toString());
     calcularValorHora();
   }
 
   function handleFeriasChange(e) {
     const valor = Number(e.target.value);
     semanasFeriasAno = Math.min(Math.max(0, valor), 52);
-    localStorage.setItem('semanasFeriasAno', semanasFeriasAno.toString());
     calcularValorHora();
   }
 </script>
