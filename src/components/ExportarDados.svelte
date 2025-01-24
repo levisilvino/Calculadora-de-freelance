@@ -17,20 +17,29 @@
       job.valorTotal.toFixed(2)
     ]);
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+    // Adiciona BOM para Excel reconhecer UTF-8
+    const BOM = '\uFEFF';
+    const csvContent = BOM + [
+      headers.join(';'),
+      ...rows.map(row => row.map(cell => {
+        const cellStr = String(cell);
+        // Escapa aspas duplicando-as e envolve em aspas se necessário
+        const needsQuotes = cellStr.includes(';') || cellStr.includes('"') || cellStr.includes('\n');
+        const escaped = cellStr.replace(/"/g, '""');
+        return needsQuotes ? `"${escaped}"` : escaped;
+      }).join(';'))
+    ].join('\r\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8-sig' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', 'jobscalc-projetos.csv');
+    link.setAttribute('download', 'jobscalc-dados.csv');
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   function exportarJSON() {

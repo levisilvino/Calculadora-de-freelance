@@ -32,44 +32,56 @@
     const savedFerias = localStorage.getItem('semanasFeriasAno');
     const savedValorHora = localStorage.getItem('valorHora');
 
-    // Carregar salário primeiro
-    if (savedSalario) {
-      salarioDesejado = Number(savedSalario);
-      console.log('Carregou salário:', salarioDesejado);
-    }
-    
-    // Carregar outras configurações
-    if (savedHoras) horasPorDia = Number(savedHoras);
-    if (savedDias) diasPorSemana = Number(savedDias);
-    if (savedFerias) semanasFeriasAno = Number(savedFerias);
-    if (savedValorHora) valorHora = Number(savedValorHora);
+    // Definir valores padrão apenas se não houver valores salvos
+    salarioDesejado = savedSalario ? Number(savedSalario) : 0;
+    horasPorDia = savedHoras ? Number(savedHoras) : 8;
+    diasPorSemana = savedDias ? Number(savedDias) : 5;
+    semanasFeriasAno = savedFerias ? Number(savedFerias) : 4;
+    valorHora = savedValorHora ? Number(savedValorHora) : 0;
+
+    console.log('Valores carregados:', {
+      salarioDesejado,
+      horasPorDia,
+      diasPorSemana,
+      semanasFeriasAno,
+      valorHora
+    });
 
     validarValores();
     
-    // Calcular valor hora inicial
-    if (salarioDesejado > 0) {
-      calcularValorHora();
-    }
+    // Adiciona um pequeno delay antes de calcular
+    setTimeout(() => {
+      if (salarioDesejado > 0) {
+        calcularValorHora();
+        console.log('Valor hora recalculado após delay:', valorHora);
+      }
+    }, 100);
   });
 
   function calcularValorHora() {
     validarValores();
     
-    const salario = Number(salarioDesejado);
+    const salario = Number(salarioDesejado) || 0;
     const semanasTrabalhadasAno = 52 - Number(semanasFeriasAno);
     const horasTrabalhadasAno = Number(horasPorDia) * Number(diasPorSemana) * semanasTrabalhadasAno;
     const horasTrabalhadasMes = horasTrabalhadasAno / 12;
     
     if (horasTrabalhadasMes > 0 && salario > 0) {
       const valor = salario / horasTrabalhadasMes;
-      valorHora = Number(valor.toFixed(2));
-      // Salvar valor hora no localStorage
-      localStorage.setItem('valorHora', valorHora.toString());
-      console.log('Cálculo:', {
-        salario,
-        horasTrabalhadasMes,
-        valorHora
-      });
+      const novoValorHora = Number(valor.toFixed(2));
+      
+      if (!isNaN(novoValorHora) && isFinite(novoValorHora) && novoValorHora > 0) {
+        valorHora = novoValorHora;
+        localStorage.setItem('valorHora', valorHora.toString());
+        console.log('Cálculo:', {
+          salario,
+          horasTrabalhadasMes,
+          valorHora
+        });
+      } else {
+        valorHora = 0;
+        localStorage.setItem('valorHora', '0');
+      }
     } else {
       valorHora = 0;
       localStorage.setItem('valorHora', '0');
@@ -92,13 +104,6 @@
   $: {
     if (salarioDesejado || horasPorDia || diasPorSemana || semanasFeriasAno) {
       validarValores();
-      
-      // Salvar no localStorage
-      localStorage.setItem('horasPorDia', horasPorDia.toString());
-      localStorage.setItem('diasPorSemana', diasPorSemana.toString());
-      localStorage.setItem('semanasFeriasAno', semanasFeriasAno.toString());
-      
-      // Recalcular valor hora
       calcularValorHora();
     }
   }
@@ -114,19 +119,22 @@
   }
 
   function handleHorasChange(e) {
-    horasPorDia = Number(e.target.value);
+    const valor = Number(e.target.value);
+    horasPorDia = Math.min(Math.max(0, valor), 24);
     localStorage.setItem('horasPorDia', horasPorDia.toString());
     calcularValorHora();
   }
 
   function handleDiasChange(e) {
-    diasPorSemana = Number(e.target.value);
+    const valor = Number(e.target.value);
+    diasPorSemana = Math.min(Math.max(0, valor), 7);
     localStorage.setItem('diasPorSemana', diasPorSemana.toString());
     calcularValorHora();
   }
 
   function handleFeriasChange(e) {
-    semanasFeriasAno = Number(e.target.value);
+    const valor = Number(e.target.value);
+    semanasFeriasAno = Math.min(Math.max(0, valor), 52);
     localStorage.setItem('semanasFeriasAno', semanasFeriasAno.toString());
     calcularValorHora();
   }
@@ -174,7 +182,7 @@
             <input
               id="horasDia"
               type="number"
-              value={horasPorDia}
+              bind:value={horasPorDia}
               on:input={handleHorasChange}
               min="1"
               max="24"
@@ -196,11 +204,11 @@
             <input
               id="diasSemana"
               type="number"
-              value={diasPorSemana}
+              bind:value={diasPorSemana}
               on:input={handleDiasChange}
               min="1"
               max="7"
-              class="w-full pl-2 pr-9 py-1.5 bg-gray-700/50 border border-gray-600 rounded-lg
+              class="w-full pl-2 pr-12 py-1.5 bg-gray-700/50 border border-gray-600 rounded-lg
                      text-gray-100 text-sm
                      focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
             />
@@ -211,18 +219,18 @@
         </div>
 
         <div>
-          <label for="semanaFerias" class="block text-xs text-gray-400 mb-1">
-            Férias por Ano
+          <label for="semanasFeriasAno" class="block text-xs text-gray-400 mb-1">
+            Férias (semanas/ano)
           </label>
           <div class="relative">
             <input
-              id="semanaFerias"
+              id="semanasFeriasAno"
               type="number"
-              value={semanasFeriasAno}
+              bind:value={semanasFeriasAno}
               on:input={handleFeriasChange}
               min="0"
               max="52"
-              class="w-full pl-2 pr-9 py-1.5 bg-gray-700/50 border border-gray-600 rounded-lg
+              class="w-full pl-2 pr-12 py-1.5 bg-gray-700/50 border border-gray-600 rounded-lg
                      text-gray-100 text-sm
                      focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
             />

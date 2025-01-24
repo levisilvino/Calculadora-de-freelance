@@ -39,10 +39,18 @@
   }
 
   function calcularValorJob(horas, urgente, complexo, valorHoraJob) {
+    // Validar entrada
+    const horasNum = Number(horas) || 0;
+    const valorHoraNum = Number(valorHoraJob) || 0;
+    
+    if (horasNum <= 0 || valorHoraNum <= 0) {
+      return 0;
+    }
+
     // Primeiro calcula o valor base com as taxas de urgência e complexidade
-    let valorBase = horas * valorHoraJob;
-    if (urgente) valorBase *= configuracoes.taxaUrgencia;
-    if (complexo) valorBase *= configuracoes.taxaComplexidade;
+    let valorBase = horasNum * valorHoraNum;
+    if (urgente && configuracoes.taxaUrgencia) valorBase *= configuracoes.taxaUrgencia;
+    if (complexo && configuracoes.taxaComplexidade) valorBase *= configuracoes.taxaComplexidade;
     
     // Depois adiciona o imposto sobre o valor total
     let valorTotal = valorBase;
@@ -57,7 +65,8 @@
       });
     }
     
-    return Number(valorTotal.toFixed(2));
+    const valorFinal = Number(valorTotal.toFixed(2));
+    return !isNaN(valorFinal) && isFinite(valorFinal) ? valorFinal : 0;
   }
 
   function migrarJobsAntigos() {
@@ -102,8 +111,8 @@
     }
   }
 
-  function adicionarJob(e) {
-    e.preventDefault();
+  function adicionarJob(event) {
+    event.preventDefault();
     
     if (novoJob.nome && novoJob.horasEstimadas > 0) {
       const job = {
@@ -123,6 +132,7 @@
           valorHora
         )
       };
+      
       dispatch('jobAdded', job);
       novoJob = { 
         nome: '', 

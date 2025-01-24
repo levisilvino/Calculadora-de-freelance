@@ -25,26 +25,46 @@
 
   let activeTab = 'Projetos';
 
-  // Carregar dados salvos do localStorage ao iniciar
-  if (typeof window !== 'undefined') {
-    const dadosSalvos = localStorage.getItem('jobscalc-dados');
-    if (dadosSalvos) {
-      const dados = JSON.parse(dadosSalvos);
-      valorHora = dados.valorHora;
-      jobs = dados.jobs;
-      configuracoes = dados.configuracoes;
-      categorias = dados.categorias;
+  function carregarDados() {
+    if (typeof window !== 'undefined') {
+      const dadosSalvos = localStorage.getItem('jobscalc-dados');
+      if (dadosSalvos) {
+        try {
+          const dados = JSON.parse(dadosSalvos);
+          valorHora = dados.valorHora || 0;
+          jobs = Array.isArray(dados.jobs) ? dados.jobs : [];
+          configuracoes = dados.configuracoes || configuracoes;
+          categorias = Array.isArray(dados.categorias) ? dados.categorias : categorias;
+        } catch (error) {
+          console.error('Erro ao carregar dados:', error);
+          // Em caso de erro, mantém os valores padrão
+        }
+      }
     }
   }
 
+  // Carregar dados quando o componente for montado
+  import { onMount } from 'svelte';
+  onMount(() => {
+    try {
+      carregarDados();
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+    }
+  });
+
   // Salvar dados no localStorage quando houver mudanças
   $: if (typeof window !== 'undefined') {
-    localStorage.setItem('jobscalc-dados', JSON.stringify({
-      valorHora,
-      jobs,
-      configuracoes,
-      categorias
-    }));
+    try {
+      localStorage.setItem('jobscalc-dados', JSON.stringify({
+        valorHora,
+        jobs,
+        configuracoes,
+        categorias
+      }));
+    } catch (error) {
+      console.error('Erro ao salvar dados:', error);
+    }
   }
 
   function handleJobAdded(event) {

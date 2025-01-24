@@ -43,6 +43,26 @@
     configuracoes.impostos = impostoPorcentagem / 100;
   }
 
+  import { onMount } from 'svelte';
+
+  onMount(() => {
+    try {
+      // Carrega as configurações do localStorage
+      const configSalvas = localStorage.getItem('configuracoes');
+      if (configSalvas) {
+        const config = JSON.parse(configSalvas);
+        configuracoes = { ...configuracoes, ...config };
+        
+        // Atualiza as porcentagens
+        taxaUrgenciaPorcentagem = ((configuracoes.taxaUrgencia - 1) * 100);
+        taxaComplexidadePorcentagem = ((configuracoes.taxaComplexidade - 1) * 100);
+        impostoPorcentagem = (configuracoes.impostos * 100);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
+    }
+  });
+
   const moedas = [
     { valor: 'BRL', nome: 'Real Brasileiro', simbolo: 'R$', local: 'pt-BR' },
     { valor: 'USD', nome: 'Dólar Americano', simbolo: '$', local: 'en-US' },
@@ -66,11 +86,30 @@
   }
 
   function handleSave() {
-    const el = document.createElement('div');
-    el.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
-    el.textContent = 'Configurações salvas com sucesso!';
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
+    try {
+      // Salva as configurações no localStorage
+      localStorage.setItem('configuracoes', JSON.stringify({
+        taxaUrgencia: configuracoes.taxaUrgencia,
+        taxaComplexidade: configuracoes.taxaComplexidade,
+        moeda: configuracoes.moeda,
+        impostos: configuracoes.impostos
+      }));
+
+      // Mostra mensagem de sucesso
+      const el = document.createElement('div');
+      el.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
+      el.textContent = 'Configurações salvas com sucesso!';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    } catch (error) {
+      // Se houver erro, mostra mensagem de erro
+      const el = document.createElement('div');
+      el.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg';
+      el.textContent = 'Erro ao salvar configurações!';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+      console.error('Erro ao salvar configurações:', error);
+    }
   }
 </script>
 
