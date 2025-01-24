@@ -13,4 +13,4 @@ extraResources:
     to: dist
     filter:
       - '**/*'
-electronVersion: 34.0.1
+electronVersion: 28.3.3
