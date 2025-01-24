@@ -133,129 +133,128 @@
         <!-- Taxa de Urgência -->
         <div class="bg-gray-700/30 rounded-lg p-4">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium text-gray-300">
+            <label for="taxa-urgencia" class="text-sm font-medium text-gray-300">
               Taxa de Urgência
             </label>
             {#if !editandoUrgencia}
               <button
-                class="text-sm text-indigo-400 hover:text-indigo-300"
+                class="text-sm text-gray-400 hover:text-white"
                 on:click={() => editandoUrgencia = true}
               >
-                Editar
+                {taxaUrgenciaPorcentagem.toFixed(1)}%
               </button>
+            {:else}
+              <div class="flex items-center">
+                <input
+                  type="number"
+                  bind:value={taxaUrgenciaPorcentagem}
+                  on:keydown={e => handleKeydown(e, 'urgencia')}
+                  on:blur={() => editandoUrgencia = false}
+                  use:focusInput
+                  min="0"
+                  max="1000"
+                  step="0.1"
+                  class="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-right"
+                />
+                <span class="ml-2 text-gray-400">%</span>
+              </div>
             {/if}
           </div>
-          
-          {#if editandoUrgencia}
-            <div class="flex items-center">
-              <input
-                type="number"
-                bind:value={taxaUrgenciaPorcentagem}
-                on:keydown={e => handleKeydown(e, 'urgencia')}
-                on:blur={() => editandoUrgencia = false}
-                use:focusInput
-                min="0"
-                max="1000"
-                step="0.1"
-                class="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-right"
-              />
-              <span class="ml-2 text-gray-400">%</span>
-            </div>
-          {:else}
-            <p class="text-2xl font-medium text-gray-200">
-              {taxaUrgenciaPorcentagem}%
-            </p>
-          {/if}
-          
-          <p class="mt-1 text-sm text-gray-400">
-            Taxa adicional para projetos urgentes
-          </p>
+          <input
+            id="taxa-urgencia"
+            type="range"
+            min="0"
+            max="100"
+            bind:value={taxaUrgenciaPorcentagem}
+            class="w-full"
+          />
+          <p class="text-sm text-gray-400">Taxa adicional para projetos urgentes</p>
         </div>
 
         <!-- Taxa de Complexidade -->
         <div class="bg-gray-700/30 rounded-lg p-4">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium text-gray-300">
+            <label for="taxa-complexidade" class="text-sm font-medium text-gray-300">
               Taxa de Complexidade
             </label>
             {#if !editandoComplexidade}
               <button
-                class="text-sm text-indigo-400 hover:text-indigo-300"
+                class="text-sm text-gray-400 hover:text-white"
                 on:click={() => editandoComplexidade = true}
               >
-                Editar
+                {taxaComplexidadePorcentagem.toFixed(1)}%
               </button>
+            {:else}
+              <div class="flex items-center">
+                <input
+                  type="number"
+                  bind:value={taxaComplexidadePorcentagem}
+                  on:keydown={e => handleKeydown(e, 'complexidade')}
+                  on:blur={() => editandoComplexidade = false}
+                  use:focusInput
+                  min="0"
+                  max="1000"
+                  step="0.1"
+                  class="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-right"
+                />
+                <span class="ml-2 text-gray-400">%</span>
+              </div>
             {/if}
           </div>
-          
-          {#if editandoComplexidade}
-            <div class="flex items-center">
-              <input
-                type="number"
-                bind:value={taxaComplexidadePorcentagem}
-                on:keydown={e => handleKeydown(e, 'complexidade')}
-                on:blur={() => editandoComplexidade = false}
-                use:focusInput
-                min="0"
-                max="1000"
-                step="0.1"
-                class="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-right"
-              />
-              <span class="ml-2 text-gray-400">%</span>
-            </div>
-          {:else}
-            <p class="text-2xl font-medium text-gray-200">
-              {taxaComplexidadePorcentagem}%
-            </p>
-          {/if}
-          
-          <p class="mt-1 text-sm text-gray-400">
-            Taxa adicional para projetos complexos
-          </p>
+          <input
+            id="taxa-complexidade"
+            type="range"
+            min="0"
+            max="100"
+            bind:value={taxaComplexidadePorcentagem}
+            class="w-full"
+          />
+          <p class="text-sm text-gray-400">Taxa adicional para projetos complexos</p>
         </div>
 
         <!-- Impostos -->
         <div class="bg-gray-700/30 rounded-lg p-4">
           <div class="flex items-center justify-between mb-2">
             <div>
-              <label class="text-sm font-medium text-gray-300">
+              <label for="taxa-impostos" class="text-sm font-medium text-gray-300">
                 Impostos
               </label>
-              {#if !editandoImpostos}
-                <button
-                  class="ml-4 text-sm text-indigo-400 hover:text-indigo-300"
-                  on:click={() => editandoImpostos = true}
-                >
-                  Editar
-                </button>
-              {/if}
+              <p class="text-xs text-gray-400">
+                Impostos e taxas que incidem sobre o valor total
+              </p>
             </div>
+            {#if !editandoImpostos}
+              <button
+                class="text-sm text-gray-400 hover:text-white"
+                on:click={() => editandoImpostos = true}
+              >
+                {impostoPorcentagem.toFixed(1)}%
+              </button>
+            {:else}
+              <div class="flex items-center">
+                <input
+                  type="number"
+                  bind:value={impostoPorcentagem}
+                  on:keydown={e => handleKeydown(e, 'impostos')}
+                  on:blur={() => editandoImpostos = false}
+                  use:focusInput
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  class="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-right"
+                />
+                <span class="ml-2 text-gray-400">%</span>
+              </div>
+            {/if}
           </div>
-          
-          {#if editandoImpostos}
-            <div class="flex items-center">
-              <input
-                type="number"
-                bind:value={impostoPorcentagem}
-                on:keydown={e => handleKeydown(e, 'impostos')}
-                on:blur={() => editandoImpostos = false}
-                use:focusInput
-                min="0"
-                max="100"
-                step="0.1"
-                class="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-right"
-              />
-              <span class="ml-2 text-gray-400">%</span>
-            </div>
-          {:else}
-            <p class="text-2xl font-medium text-gray-200">
-              {impostoPorcentagem}%
-            </p>
-          {/if}
-          
-          <p class="mt-1 text-sm text-gray-400">
-            Impostos sobre o valor final
-          </p>
+          <input
+            id="taxa-impostos"
+            type="range"
+            min="0"
+            max="100"
+            bind:value={impostoPorcentagem}
+            class="w-full"
+          />
         </div>
       </div>
     </section>
@@ -269,11 +268,12 @@
 
       <div class="space-y-4">
         <div class="flex items-center space-x-4">
-          <label class="text-sm text-gray-400">Valor Base:</label>
+          <label for="valor-base" class="text-sm text-gray-400">Valor Base:</label>
           <input
+            id="valor-base"
             type="number"
             bind:value={valorExemplo}
-            class="w-32 px-3 py-1.5 bg-gray-700/50 border border-gray-600 rounded text-white text-right"
+            class="bg-gray-700/30 rounded px-2 py-1 text-white w-24"
           />
         </div>
 

@@ -222,10 +222,11 @@
 
         <!-- Input para upload de imagem -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-300 mb-2">
+          <label for="profile-image" class="block text-sm font-medium text-gray-300 mb-2">
             Foto do Perfil (opcional)
           </label>
           <input
+            id="profile-image"
             type="file"
             accept="image/*"
             on:change={handleImageChange}
@@ -301,10 +302,11 @@
 
         <!-- Input para upload de imagem -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-300 mb-2">
+          <label for="edit-profile-image" class="block text-sm font-medium text-gray-300 mb-2">
             Nova foto do perfil
           </label>
           <input
+            id="edit-profile-image"
             type="file"
             accept="image/*"
             on:change={handleImageChange}
